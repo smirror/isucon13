@@ -27,7 +27,7 @@ restart-go:
 	sudo systemctl restart isupipe-go.service
 
 .PHONY: bench
-bench-dev: alp-cat slow-show before
+bench: alp-cat slow-show before
 
 .PHONY: log
 log: 
@@ -45,13 +45,11 @@ commit:
 .PHONY: before
 before:
 	$(eval when := $(shell date "+%s"))
-	sudo mkdir /var/log/mysql/$(when)
-	sudo mkdir /var/log/nginx/$(when)
 	@if [ -f $(NGX_LOG) ]; then \
-		sudo mv -f $(NGX_LOG) /var/log/nginx/$(when)/ ; \
+		sudo mv -f $(NGX_LOG) /var/log/nginx/$(when).log ; \
 	fi
 	@if [ -f $(MYSQL_LOG) ]; then \
-		sudo mv -f $(MYSQL_LOG) /var/log/mysql/$(when)/ ; \
+		sudo mv -f $(MYSQL_LOG) /var/log/mysql/$(when).log ; \
 	fi
 	sudo systemctl restart nginx mysql
 
