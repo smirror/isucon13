@@ -86,12 +86,12 @@ slow-off:
 # alp
 
 ALPSORT=sum
-ALPM="^/api/initialize,^/api/(tag|user/.+/theme),^/api/livestream(/[^/]+){0,2}(/(search|reservation|report|ngwords|moderate|enter|exit|statistics|reaction))?$|^/api/user/.+/livestream,^/api/(register|login|user/me|icon|user/.+/(statistics|icon)),^/api/payment"
+ALPM="/api/livestream/[0-9]+,/api/user/"
 OUTFORMAT=count,method,uri,min,max,sum,avg,p99
 
 .PHONY: alp-cat
 alp-cat:
-	sudo alp json --file=/var/log/nginx/access.log --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q
+	 sudo cat /var/log/nginx/access.log | alp ltsv --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q > alp-log.txt
 
 .PHONY: alpsave
 alpsave:
