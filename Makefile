@@ -63,13 +63,13 @@ before:
 
 .PHONY: slow
 slow:
-	sudo pt-query-digest $(MYSQL_LOG) | $(SLACKCAT_MYSQL)
+	sudo pt-query-digest $(MYSQL_LOG)
 
 # mysqldumpslowを使ってslow wuery logを出力
 # オプションは合計時間ソート
 .PHONY: slow-show
 slow-show:
-	sudo mysqldumpslow -s t $(SLOW_LOG) | head -n 20 | $(SLACKCAT_MYSQL)
+	sudo mysqldumpslow -s t $(SLOW_LOG) | head -n 20 > slow_query_log.txt
 
 # slow-wuery-logを取る設定にする
 # DBを再起動すると設定はリセットされる
@@ -91,7 +91,7 @@ OUTFORMAT=count,method,uri,min,max,sum,avg,p99
 
 .PHONY: alp-cat
 alp-cat:
-	sudo alp ltsv --file=/var/log/nginx/access.log --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q | $(SLACKCAT_ALP)
+	sudo alp ltsv --file=/var/log/nginx/access.log --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q > alp_log.txt
 
 .PHONY: alpsave
 alpsave:
