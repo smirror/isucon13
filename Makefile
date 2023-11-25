@@ -86,7 +86,7 @@ slow-off:
 # alp
 
 ALPSORT=sum
-ALPM="/api/*"
+ALPM="^/api/initialize,^/api/(tag|user/.+/theme),^/api/livestream(/[^/]+){0,2}(/(search|reservation|report|ngwords|moderate|enter|exit|statistics|reaction))?$|^/api/user/.+/livestream,^/api/(register|login|user/me|icon|user/.+/(statistics|icon)),^/api/payment"
 OUTFORMAT=count,method,uri,min,max,sum,avg,p99
 
 .PHONY: alp-cat
