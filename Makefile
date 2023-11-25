@@ -86,12 +86,12 @@ slow-off:
 # alp
 
 ALPSORT=sum
-ALPM="/api/isu/.+/icon,/api/isu/.+/graph,/api/isu/.+/condition,/api/isu/[-a-z0-9]+,/api/condition/[-a-z0-9]+,/api/catalog/.+,/api/condition\?,/isu/........-....-.+"
+ALPM="/api/*"
 OUTFORMAT=count,method,uri,min,max,sum,avg,p99
 
 .PHONY: alp-cat
 alp-cat:
-	sudo alp ltsv --file=/var/log/nginx/access.log --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q > alp_log.txt
+	sudo alp ltsv --file=/var/log/nginx/access.log --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q
 
 .PHONY: alpsave
 alpsave:
