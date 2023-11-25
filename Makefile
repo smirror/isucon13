@@ -26,14 +26,8 @@ CA:=-o /dev/null -s -w "%{http_code}\n"
 restart-go:
 	sudo systemctl restart isupipe-go.service
 
-.PHONY: dev
-dev: 
-	cd $(BUILD_DIR); \
-	make \
-	sudo systemctl restart isupipe-go.service;
-
-.PHONY: bench-dev
-bench-dev: commit before slow-on dev
+.PHONY: bench
+bench-dev: alp-cat slow-show before
 
 .PHONY: log
 log: 
@@ -84,7 +78,6 @@ slow-off:
 	$(MYSQL) -e "set global slow_query_log = OFF;"
 
 # alp
-
 ALPSORT=sum
 ALPM="/api/livestream/[0-9]+,/api/user/"
 OUTFORMAT=count,method,uri,min,max,sum,avg,p99
