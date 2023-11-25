@@ -162,7 +162,6 @@ func getNgwords(c echo.Context) error {
 
 func postLivecommentHandler(c echo.Context) error {
 	ctx := c.Request().Context()
-	defer c.Request().Body.Close()
 
 	if err := verifyUserSession(c); err != nil {
 		return err
@@ -173,22 +172,37 @@ func postLivecommentHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "livestream_id in path must be integer")
 	}
 
-	// error already checked
-	sess, _ := session.Get(defaultSessionIDKey, c)
-	// existence already checked
-	userID := sess.Values[defaultUserIDKey].(int64)
+	sess, err := session.Get(defaultSessionIDKey, c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session: "+err.Error())
+	}
+	userID, ok := sess.Values[defaultUserIDKey].(int64)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "session user id is not valid")
+	}
 
-	var req *PostLivecommentRequest
-	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+	req := new(PostLivecommentRequest)
+	if err := json.NewDecoder(c.Request().Body).Decode(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to decode the request body as json")
 	}
+	defer c.Request().Body.Close()
 
 	tx, err := dbConn.BeginTxx(ctx, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to begin transaction: "+err.Error())
 	}
-	defer tx.Rollback()
+	defer func() {
+		if p := recover(); p != nil {
+			tx.Rollback()
+			panic(p) // re-throw panic after Rollback
+		} else if err != nil {
+			tx.Rollback() // err is non-nil; don't change it
+		} else {
+			err = tx.Commit() // if Commit returns error update err with commit err
+		}
+	}()
 
+	// ライブストリームの存在確認等
 	var livestreamModel LivestreamModel
 	if err := tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", livestreamID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -199,30 +213,18 @@ func postLivecommentHandler(c echo.Context) error {
 	}
 
 	// スパム判定
-	var ngwords []*NGWord
-	if err := tx.SelectContext(ctx, &ngwords, "SELECT id, user_id, livestream_id, word FROM ng_words WHERE user_id = ? AND livestream_id = ?", livestreamModel.UserID, livestreamModel.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	var ngwords []string
+	err = tx.SelectContext(ctx, &ngwords, "SELECT word FROM ng_words WHERE user_id = ? AND livestream_id = ?", livestreamModel.UserID, livestreamModel.ID)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get NG words: "+err.Error())
 	}
 
-	var hitSpam int
 	for _, ngword := range ngwords {
-		query := `
-		SELECT COUNT(*)
-		FROM
-		(SELECT ? AS text) AS texts
-		INNER JOIN
-		(SELECT CONCAT('%', ?, '%')	AS pattern) AS patterns
-		ON texts.text LIKE patterns.pattern;
-		`
-		if err := tx.GetContext(ctx, &hitSpam, query, req.Comment, ngword.Word); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get hitspam: "+err.Error())
-		}
-		c.Logger().Infof("[hitSpam=%d] comment = %s", hitSpam, req.Comment)
-		if hitSpam >= 1 {
+		if strings.Contains(req.Comment, ngword) {
 			return echo.NewHTTPError(http.StatusBadRequest, "このコメントがスパム判定されました")
 		}
 	}
-
+	
 	now := time.Now().Unix()
 	livecommentModel := LivecommentModel{
 		UserID:       userID,
