@@ -24,7 +24,7 @@ CA:=-o /dev/null -s -w "%{http_code}\n"
 
 .PHONY:restart-go
 restart-go:
-	systemctl restart isupipe-go.service
+	sudo systemctl restart isupipe-go.service
 
 .PHONY: dev
 dev: 
@@ -91,7 +91,7 @@ OUTFORMAT=count,method,uri,min,max,sum,avg,p99
 
 .PHONY: alp-cat
 alp-cat:
-	sudo alp ltsv --file=/var/log/nginx/access.log --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q
+	sudo alp json --file=/var/log/nginx/access.log --sort $(ALPSORT) --reverse -o $(OUTFORMAT) -m $(ALPM) -q
 
 .PHONY: alpsave
 alpsave:
