@@ -1,2 +1,4 @@
 /public/
-sql
+sql/
+!sql/00_create_database.sql
+!sql/10_schema.sql
