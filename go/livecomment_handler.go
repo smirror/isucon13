@@ -68,57 +68,42 @@ type NGWord struct {
 }
 
 func getLivecommentsHandler(c echo.Context) error {
-	ctx := c.Request().Context()
+    ctx := c.Request().Context()
 
-	if err := verifyUserSession(c); err != nil {
-		// echo.NewHTTPErrorが返っているのでそのまま出力
-		return err
-	}
+    if err := verifyUserSession(c); err != nil {
+        return err
+    }
 
-	livestreamID, err := strconv.Atoi(c.Param("livestream_id"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "livestream_id in path must be integer")
-	}
+    livestreamID, err := strconv.Atoi(c.Param("livestream_id"))
+    if err != nil {
+        return echo.NewHTTPError(http.StatusBadRequest, "livestream_id in path must be integer")
+    }
 
-	tx, err := dbConn.BeginTxx(ctx, nil)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to begin transaction: "+err.Error())
-	}
-	defer tx.Rollback()
+    query := "SELECT * FROM livecomments WHERE livestream_id = ? ORDER BY created_at DESC"
+    if c.QueryParam("limit") != "" {
+        limit, err := strconv.Atoi(c.QueryParam("limit"))
+        if err != nil {
+            return echo.NewHTTPError(http.StatusBadRequest, "limit query parameter must be integer")
+        }
+        query += fmt.Sprintf(" LIMIT %d", limit)
+    }
 
-	query := "SELECT * FROM livecomments WHERE livestream_id = ? ORDER BY created_at DESC"
-	if c.QueryParam("limit") != "" {
-		limit, err := strconv.Atoi(c.QueryParam("limit"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "limit query parameter must be integer")
-		}
-		query += fmt.Sprintf(" LIMIT %d", limit)
-	}
+    livecommentModels := []LivecommentModel{}
+    err = dbConn.SelectContext(ctx, &livecommentModels, query, livestreamID)
+    if err != nil {
+        return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomments: "+err.Error())
+    }
 
-	livecommentModels := []LivecommentModel{}
-	err = tx.SelectContext(ctx, &livecommentModels, query, livestreamID)
-	if errors.Is(err, sql.ErrNoRows) {
-		return c.JSON(http.StatusOK, []*Livecomment{})
-	}
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomments: "+err.Error())
-	}
+    livecomments := make([]Livecomment, len(livecommentModels))
+    for i := range livecommentModels {
+        livecomment, err := fillLivecommentResponse(ctx, dbConn, livecommentModels[i])
+        if err != nil {
+            return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill livecomments: "+err.Error())
+        }
+        livecomments[i] = livecomment
+    }
 
-	livecomments := make([]Livecomment, len(livecommentModels))
-	for i := range livecommentModels {
-		livecomment, err := fillLivecommentResponse(ctx, tx, livecommentModels[i])
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fil livecomments: "+err.Error())
-		}
-
-		livecomments[i] = livecomment
-	}
-
-	if err := tx.Commit(); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
-	}
-
-	return c.JSON(http.StatusOK, livecomments)
+    return c.JSON(http.StatusOK, livecomments)
 }
 
 func getNgwords(c echo.Context) error {
