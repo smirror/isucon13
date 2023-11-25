@@ -1,20 +1,20 @@
-Count: 4  Time=207.16s (828s)  Lock=0.10s (0s)  Rows=1.5 (6), []@[]
+Count: 5  Time=120.46s (602s)  Lock=0.08s (0s)  Rows=0.0 (0), []@[]
   throttle:      N 'S' warning(s) suppressed.
 
-Count: 551450  Time=0.00s (141s)  Lock=0.00s (0s)  Rows=0.4 (221002), 2users@localhost
+Count: 1  Time=337.89s (337s)  Lock=0.21s (0s)  Rows=1.0 (1), []@[]
+  throttle:     N 'S' warning(s) suppressed.
+
+Count: 13726  Time=0.00s (30s)  Lock=0.00s (0s)  Rows=0.0 (118), 2users@localhost
   #
 
-Count: 54578  Time=0.00s (40s)  Lock=0.00s (0s)  Rows=0.0 (0), isucon[isucon]@localhost
-  DELETE FROM livecomments
-  WHERE
-  id = N AND
-  livestream_id = N AND
-  (SELECT COUNT(*)
-  FROM
-  (SELECT 'S' AS text) AS texts
-  INNER JOIN
-  (SELECT CONCAT('S', 'S', 'S')	AS pattern) AS patterns
-  ON texts.text LIKE patterns.pattern) >= N
+Count: 595  Time=0.02s (13s)  Lock=0.00s (0s)  Rows=0.5 (273), isudns[isudns]@localhost
+  SELECT content,ttl,prio,type,domain_id,disabled,name,auth FROM records WHERE disabled=N and name='S' and domain_id=N
 
-Count: 16210  Time=0.00s (18s)  Lock=0.00s (0s)  Rows=0.0 (0), isudns[isudns]@localhost
+Count: 319  Time=0.02s (5s)  Lock=0.00s (0s)  Rows=0.0 (0), isudns[isudns]@localhost
+  delete from records where domain_id=N and name='S' and type='S'
+
+Count: 1361  Time=0.00s (3s)  Lock=0.00s (0s)  Rows=0.0 (0), isudns[isudns]@localhost
   select kind,content from domains, domainmetadata where domainmetadata.domain_id=domains.id and name='S'
+
+Count: 312  Time=0.01s (3s)  Lock=0.00s (0s)  Rows=0.0 (0), isucon[isucon]@localhost
+  INSERT INTO icons (user_id, image) VALUES (N, 'S')
