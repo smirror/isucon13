@@ -1,3 +1,2 @@
 /public/
-sql/
-!sql/initdb.d/*
+sql/initial_*
