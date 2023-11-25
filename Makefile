@@ -2,14 +2,14 @@ export GO111MODULE=on
 
 SQL_CMD:=mysql -h$(DB_HOST) -P$(DB_PORT) -u$(DB_USER) -p$(DB_PASS) $(DB_NAME)
 
-NGX_LOG:=/var/log/nginx/app.access.log
+NGX_LOG:=/var/log/nginx/access.log
 
 MYSQL_HOST="127.0.0.1"
 MYSQL_PORT=3306
 MYSQL_USER=isucon
 MYSQL_DBNAME=isupipe
 MYSQL_PASS=isucon
-MYSQL_LOG:=/var/log/mysql/slow.log
+MYSQL_LOG:=/var/log/mysql/mysql-slow.log
 
 MYSQL=mysql -h$(MYSQL_HOST) -P$(MYSQL_PORT) -u$(MYSQL_USER) -p$(MYSQL_PASS) $(MYSQL_DBNAME)
 SLOW_LOG=/var/log/mysql/mysql-slow.log
