@@ -45,8 +45,12 @@ commit:
 .PHONY: before
 before:
 	$(eval when := $(shell date "+%s"))
-	sudo rm $(MYSQL_LOG)
-	sudo rm $(NGX_LOG)
+	@if [ -f $(NGX_LOG) ]; then \
+		sudo rm $(NGX_LOG); \
+	fi
+	@if [ -f $(MYSQL_LOG) ]; then \
+		sudo rm $(MYSQL_LOG); \
+	fi
 	sudo systemctl restart nginx mysql
 
 .PHONY: slow
